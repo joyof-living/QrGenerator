@@ -34,7 +34,7 @@ function App() {
     }
   }, [url, fgColor, bgColor]);
 
-  const handleDownload = async () => {
+  const handleShare = async () => {
     if (!qrCodeRef.current || !url) {
       return;
     }
@@ -43,46 +43,47 @@ function App() {
       const dataUrl = await toPng(qrCodeRef.current, { cacheBust: true });
       const finalFileName = (fileName.trim() === '' ? 'qr-code' : fileName) + '.png';
 
-      // Use Web Share API if available (for mobile devices)
+      // Use Web Share API if available
       if (navigator.share && navigator.canShare) {
         const response = await fetch(dataUrl);
         const blob = await response.blob();
         const file = new File([blob], finalFileName, { type: blob.type });
 
-        // Check if the file can be shared
         if (navigator.canShare({ files: [file] })) {
           await navigator.share({
             files: [file],
             title: fileName || 'QR Code',
             text: caption || url,
           });
-        } else {
-          // Fallback for when the file type can't be shared
-          const link = document.createElement('a');
-          link.download = finalFileName;
-          link.href = dataUrl;
-          link.click();
+          return; // Exit if share is successful
         }
-      } else {
-        // Fallback to direct download for desktops
-        const link = document.createElement('a');
-        link.download = finalFileName;
-        link.href = dataUrl;
-        link.click();
       }
+
+      // Fallback to direct download if sharing is not available or fails
+      const link = document.createElement('a');
+      link.download = finalFileName;
+      link.href = dataUrl;
+      link.click();
     } catch (err) {
-      console.error('Failed to download or share QR code', err);
-      // Fallback for any error during share API usage
-      try {
-        const dataUrl = await toPng(qrCodeRef.current, { cacheBust: true });
-        const finalFileName = (fileName.trim() === '' ? 'qr-code' : fileName) + '.png';
-        const link = document.createElement('a');
-        link.download = finalFileName;
-        link.href = dataUrl;
-        link.click();
-      } catch (downloadErr) {
-        console.error('Failed to execute fallback download', downloadErr);
-      }
+      console.error('Failed to share or download QR code', err);
+      // Attempt a final fallback on any error
+      handleDirectDownload();
+    }
+  };
+
+  const handleDirectDownload = async () => {
+    if (!qrCodeRef.current || !url) {
+      return;
+    }
+    try {
+      const dataUrl = await toPng(qrCodeRef.current, { cacheBust: true });
+      const finalFileName = (fileName.trim() === '' ? 'qr-code' : fileName) + '.png';
+      const link = document.createElement('a');
+      link.download = finalFileName;
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error('Failed to execute direct download', err);
     }
   };
 
@@ -136,7 +137,10 @@ function App() {
               placeholder="예: my-qr-code"
             />
           </div>
-          <button onClick={handleDownload} disabled={!url}>QR 코드 다운로드</button>
+                    <div className="button-group">
+            <button onClick={handleShare} disabled={!url}>공유하기(사진첩 저장 가능)</button>
+            <button onClick={handleDirectDownload} disabled={!url}>내려받기</button>
+          </div>
         </div>
         <div className="preview">
           <h2>미리보기</h2>

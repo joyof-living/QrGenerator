@@ -135,3 +135,13 @@ canvas {
     font-size: 1.5rem;
   }
 }
+
+.button-group {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.button-group button {
+  flex-grow: 1;
+}
