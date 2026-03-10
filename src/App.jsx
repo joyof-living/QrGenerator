@@ -85,7 +85,9 @@ function App() {
 
   return (
     <div className="app-container">
-      <h1>우리 노동부 AX 네트워크<br />QR 코드 생성기</h1>
+      <div className="app-header">
+        <h1>우리 노동부 AX 네트워크<br />QR 코드 생성기</h1>
+      </div>
       <div className="main-content">
         <div className="controls">
           <div className="input-group">
@@ -140,7 +142,7 @@ function App() {
           </div>
           {error && <p className="error-message" role="alert">{error}</p>}
           <div className="button-group">
-            <button onClick={handleShare} disabled={!url}>공유하기(사진첩 저장 가능)</button>
+            <button onClick={handleShare} disabled={!url}>공유하기<br />(사진첩 저장 가능)</button>
             <button onClick={handleDirectDownload} disabled={!url} className="secondary">내려받기</button>
           </div>
         </div>
