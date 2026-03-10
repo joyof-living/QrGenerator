@@ -4,17 +4,20 @@ import { toPng } from 'html-to-image';
 import './App.css';
 
 function App() {
-  const [url, setUrl] = useState('https://github.com/gemini-cli');
-  const [caption, setCaption] = useState('Made with Gemini');
-  const [fileName, setFileName] = useState('qr-code');
+  const [url, setUrl] = useState('https://moel.go.kr');
+  const [caption, setCaption] = useState('고용노동부 누리집');
+  const [fileName, setFileName] = useState('');
   const [fgColor, setFgColor] = useState('#000000');
   const [bgColor, setBgColor] = useState('#ffffff');
   const canvasRef = useRef(null);
   const qrCodeRef = useRef(null);
 
   useEffect(() => {
-    if (canvasRef.current) {
-      QRCode.toCanvas(canvasRef.current, url, {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    if (url) {
+      QRCode.toCanvas(canvas, url, {
         width: 280,
         margin: 2,
         color: {
@@ -24,11 +27,15 @@ function App() {
       }, (error) => {
         if (error) console.error(error);
       });
+    } else {
+      // Clear the canvas if URL is empty
+      const context = canvas.getContext('2d');
+      context.clearRect(0, 0, canvas.width, canvas.height);
     }
   }, [url, fgColor, bgColor]);
 
   const handleDownload = () => {
-    if (qrCodeRef.current) {
+    if (qrCodeRef.current && url) { // Only allow download if there is a URL
       toPng(qrCodeRef.current, { cacheBust: true })
         .then((dataUrl) => {
           const link = document.createElement('a');
@@ -54,6 +61,7 @@ function App() {
               type="text"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
+              placeholder="예. https://moel.go.kr"
             />
           </div>
           <div className="input-group">
@@ -62,6 +70,7 @@ function App() {
               type="text"
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
+              placeholder="예. 고용노동부 누리집"
             />
           </div>
           <div className="color-picker-group">
@@ -91,11 +100,11 @@ function App() {
               placeholder="예: my-qr-code"
             />
           </div>
-          <button onClick={handleDownload}>QR 코드 다운로드</button>
+          <button onClick={handleDownload} disabled={!url}>QR 코드 다운로드</button>
         </div>
         <div className="preview">
           <h2>미리보기</h2>
-          <div ref={qrCodeRef} className="qr-code-container">
+          <div ref={qrCodeRef} className="qr-code-container" style={{ visibility: url ? 'visible' : 'hidden' }}>
             <canvas ref={canvasRef}></canvas>
             {caption && <p className="caption">{caption}</p>}
           </div>

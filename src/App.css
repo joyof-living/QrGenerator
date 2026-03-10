@@ -6,6 +6,7 @@
   background-color: #f0f2f5;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   padding: 2rem;
+  box-sizing: border-box;
 }
 
 .app-container {
@@ -21,6 +22,7 @@ h1 {
   text-align: center;
   color: #1c1e21;
   margin-bottom: 2rem;
+  font-size: 1.75rem;
 }
 
 .main-content {
@@ -113,4 +115,23 @@ button:hover {
 
 canvas {
   display: block;
+}
+
+/* Media Query for Mobile Responsiveness */
+@media (max-width: 768px) {
+  #root {
+    padding: 1rem;
+  }
+
+  .app-container {
+    padding: 1rem;
+  }
+
+  .main-content {
+    flex-direction: column;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
 }
