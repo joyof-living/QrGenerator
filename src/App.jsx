@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import QRCode from 'qrcode';
-import { toPng } from 'html-to-image';
 import './App.css';
 
 function App() {
@@ -11,7 +10,6 @@ function App() {
   const [bgColor, setBgColor] = useState('#ffffff');
   const [error, setError] = useState('');
   const canvasRef = useRef(null);
-  const qrCodeRef = useRef(null);
 
   // QR 생성 디바운스 처리 (입력 중 불필요한 재생성 방지)
   useEffect(() => {
@@ -35,22 +33,46 @@ function App() {
   }, [url, fgColor, bgColor]);
 
   const captureImage = async () => {
-    // 캡처 전 QR 코드를 캔버스에 완전히 그린 뒤 진행 (race condition 방지)
-    await new Promise((resolve, reject) => {
-      QRCode.toCanvas(canvasRef.current, url, {
-        width: 280,
-        margin: 2,
-        color: { dark: fgColor, light: bgColor },
-      }, (err) => { if (err) reject(err); else resolve(); });
+    // html-to-image 대신 QRCode.toDataURL + 오프스크린 캔버스로 합성
+    // (html-to-image의 cloneNode는 canvas 내용을 복사하지 못해 모바일에서 공란이 됨)
+    const qrDataUrl = await QRCode.toDataURL(url, {
+      width: 280,
+      margin: 2,
+      color: { dark: fgColor, light: bgColor },
     });
 
-    const dataUrl = await toPng(qrCodeRef.current, { cacheBust: true });
+    const padding = 20;
+    const qrSize = 280;
+    const captionFontSize = 17;
+    const captionGap = 14;
+    const bottomPad = caption ? captionGap + captionFontSize + padding : padding;
+
+    const offscreen = document.createElement('canvas');
+    offscreen.width = qrSize + padding * 2;
+    offscreen.height = padding + qrSize + bottomPad;
+
+    const ctx = offscreen.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, offscreen.width, offscreen.height);
+
+    const img = new Image();
+    await new Promise(resolve => { img.onload = resolve; img.src = qrDataUrl; });
+    ctx.drawImage(img, padding, padding, qrSize, qrSize);
+
+    if (caption) {
+      ctx.fillStyle = '#374151';
+      ctx.font = `600 ${captionFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText(caption, offscreen.width / 2, padding + qrSize + captionGap + captionFontSize);
+    }
+
+    const dataUrl = offscreen.toDataURL('image/png');
     const finalFileName = (fileName.trim() === '' ? 'qr-code' : fileName) + '.png';
     return { dataUrl, finalFileName };
   };
 
   const handleShare = async () => {
-    if (!qrCodeRef.current || !url) return;
+    if (!url) return;
     setError('');
     try {
       const { dataUrl, finalFileName } = await captureImage();
@@ -78,7 +100,7 @@ function App() {
   };
 
   const handleDirectDownload = async () => {
-    if (!qrCodeRef.current || !url) return;
+    if (!url) return;
     setError('');
     try {
       const { dataUrl, finalFileName } = await captureImage();
@@ -157,7 +179,7 @@ function App() {
         </div>
         <div className="preview">
           <h2>미리보기</h2>
-          <div ref={qrCodeRef} className="qr-code-container" style={{ visibility: url ? 'visible' : 'hidden' }}>
+          <div className="qr-code-container" style={{ visibility: url ? 'visible' : 'hidden' }}>
             <canvas ref={canvasRef}></canvas>
             {caption && <p className="caption">{caption}</p>}
           </div>
