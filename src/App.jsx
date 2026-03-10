@@ -34,19 +34,55 @@ function App() {
     }
   }, [url, fgColor, bgColor]);
 
-  const handleDownload = () => {
-    if (qrCodeRef.current && url) { // Only allow download if there is a URL
-      toPng(qrCodeRef.current, { cacheBust: true })
-        .then((dataUrl) => {
+  const handleDownload = async () => {
+    if (!qrCodeRef.current || !url) {
+      return;
+    }
+
+    try {
+      const dataUrl = await toPng(qrCodeRef.current, { cacheBust: true });
+      const finalFileName = (fileName.trim() === '' ? 'qr-code' : fileName) + '.png';
+
+      // Use Web Share API if available (for mobile devices)
+      if (navigator.share && navigator.canShare) {
+        const response = await fetch(dataUrl);
+        const blob = await response.blob();
+        const file = new File([blob], finalFileName, { type: blob.type });
+
+        // Check if the file can be shared
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: fileName || 'QR Code',
+            text: caption || url,
+          });
+        } else {
+          // Fallback for when the file type can't be shared
           const link = document.createElement('a');
-          const finalFileName = fileName.trim() === '' ? 'qr-code' : fileName;
-          link.download = `${finalFileName}.png`;
+          link.download = finalFileName;
           link.href = dataUrl;
           link.click();
-        })
-        .catch((err) => {
-          console.error(err);
-        });
+        }
+      } else {
+        // Fallback to direct download for desktops
+        const link = document.createElement('a');
+        link.download = finalFileName;
+        link.href = dataUrl;
+        link.click();
+      }
+    } catch (err) {
+      console.error('Failed to download or share QR code', err);
+      // Fallback for any error during share API usage
+      try {
+        const dataUrl = await toPng(qrCodeRef.current, { cacheBust: true });
+        const finalFileName = (fileName.trim() === '' ? 'qr-code' : fileName) + '.png';
+        const link = document.createElement('a');
+        link.download = finalFileName;
+        link.href = dataUrl;
+        link.click();
+      } catch (downloadErr) {
+        console.error('Failed to execute fallback download', downloadErr);
+      }
     }
   };
 
