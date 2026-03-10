@@ -44,12 +44,16 @@ function App() {
     const padding = 20;
     const qrSize = 280;
     const captionFontSize = 17;
+    const captionLineHeight = 26;
     const captionGap = 14;
-    const bottomPad = caption ? captionGap + captionFontSize + padding : padding;
+    const captionLines = caption ? caption.split('\n') : [];
+    const captionAreaHeight = captionLines.length > 0
+      ? captionGap + captionLines.length * captionLineHeight + padding
+      : padding;
 
     const offscreen = document.createElement('canvas');
     offscreen.width = qrSize + padding * 2;
-    offscreen.height = padding + qrSize + bottomPad;
+    offscreen.height = padding + qrSize + captionAreaHeight;
 
     const ctx = offscreen.getContext('2d');
     ctx.fillStyle = '#ffffff';
@@ -59,11 +63,13 @@ function App() {
     await new Promise(resolve => { img.onload = resolve; img.src = qrDataUrl; });
     ctx.drawImage(img, padding, padding, qrSize, qrSize);
 
-    if (caption) {
+    if (captionLines.length > 0) {
       ctx.fillStyle = '#374151';
       ctx.font = `600 ${captionFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
       ctx.textAlign = 'center';
-      ctx.fillText(caption, offscreen.width / 2, padding + qrSize + captionGap + captionFontSize);
+      captionLines.forEach((line, i) => {
+        ctx.fillText(line, offscreen.width / 2, padding + qrSize + captionGap + captionFontSize + i * captionLineHeight);
+      });
     }
 
     const dataUrl = offscreen.toDataURL('image/png');
@@ -133,12 +139,12 @@ function App() {
           </div>
           <div className="input-group">
             <label htmlFor="caption-input">문구</label>
-            <input
+            <textarea
               id="caption-input"
-              type="text"
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
               placeholder="예. 고용노동부 누리집"
+              rows={2}
             />
           </div>
           <div className="color-picker-group">
