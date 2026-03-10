@@ -6,6 +6,7 @@ import './App.css';
 function App() {
   const [url, setUrl] = useState('https://github.com/gemini-cli');
   const [caption, setCaption] = useState('Made with Gemini');
+  const [fileName, setFileName] = useState('qr-code');
   const [fgColor, setFgColor] = useState('#000000');
   const [bgColor, setBgColor] = useState('#ffffff');
   const canvasRef = useRef(null);
@@ -31,7 +32,8 @@ function App() {
       toPng(qrCodeRef.current, { cacheBust: true })
         .then((dataUrl) => {
           const link = document.createElement('a');
-          link.download = 'my-qr-code.png';
+          const finalFileName = fileName.trim() === '' ? 'qr-code' : fileName;
+          link.download = `${finalFileName}.png`;
           link.href = dataUrl;
           link.click();
         })
@@ -43,11 +45,11 @@ function App() {
 
   return (
     <div className="app-container">
-      <h1>QR Code Generator</h1>
+      <h1>우리 노동부 AX 네트워크<br />QR 코드 생성기</h1>
       <div className="main-content">
         <div className="controls">
           <div className="input-group">
-            <label>URL or Text</label>
+            <label>URL 또는 텍스트</label>
             <input
               type="text"
               value={url}
@@ -55,7 +57,7 @@ function App() {
             />
           </div>
           <div className="input-group">
-            <label>Caption</label>
+            <label>문구</label>
             <input
               type="text"
               value={caption}
@@ -64,7 +66,7 @@ function App() {
           </div>
           <div className="color-picker-group">
             <div className="input-group">
-              <label>Foreground Color</label>
+              <label>QR 코드 색상</label>
               <input
                 type="color"
                 value={fgColor}
@@ -72,7 +74,7 @@ function App() {
               />
             </div>
             <div className="input-group">
-              <label>Background Color</label>
+              <label>배경 색상</label>
               <input
                 type="color"
                 value={bgColor}
@@ -80,10 +82,19 @@ function App() {
               />
             </div>
           </div>
-          <button onClick={handleDownload}>Download QR Code</button>
+          <div className="input-group">
+            <label>저장할 파일명</label>
+            <input
+              type="text"
+              value={fileName}
+              onChange={(e) => setFileName(e.target.value)}
+              placeholder="예: my-qr-code"
+            />
+          </div>
+          <button onClick={handleDownload}>QR 코드 다운로드</button>
         </div>
         <div className="preview">
-          <h2>Preview</h2>
+          <h2>미리보기</h2>
           <div ref={qrCodeRef} className="qr-code-container">
             <canvas ref={canvasRef}></canvas>
             {caption && <p className="caption">{caption}</p>}
