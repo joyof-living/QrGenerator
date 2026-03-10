@@ -9,81 +9,77 @@ function App() {
   const [fileName, setFileName] = useState('');
   const [fgColor, setFgColor] = useState('#000000');
   const [bgColor, setBgColor] = useState('#ffffff');
+  const [error, setError] = useState('');
   const canvasRef = useRef(null);
   const qrCodeRef = useRef(null);
 
+  // QR 생성 디바운스 처리 (입력 중 불필요한 재생성 방지)
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const t = setTimeout(() => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
 
-    if (url) {
-      QRCode.toCanvas(canvas, url, {
-        width: 280,
-        margin: 2,
-        color: {
-          dark: fgColor,
-          light: bgColor,
-        },
-      }, (error) => {
-        if (error) console.error(error);
-      });
-    } else {
-      // Clear the canvas if URL is empty
-      const context = canvas.getContext('2d');
-      context.clearRect(0, 0, canvas.width, canvas.height);
-    }
+      if (url) {
+        QRCode.toCanvas(canvas, url, {
+          width: 280,
+          margin: 2,
+          color: { dark: fgColor, light: bgColor },
+        }, (err) => { if (err) console.error(err); });
+      } else {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }, 300);
+
+    return () => clearTimeout(t);
   }, [url, fgColor, bgColor]);
 
+  const captureImage = async () => {
+    const dataUrl = await toPng(qrCodeRef.current, { cacheBust: true });
+    const finalFileName = (fileName.trim() === '' ? 'qr-code' : fileName) + '.png';
+    return { dataUrl, finalFileName };
+  };
+
   const handleShare = async () => {
-    if (!qrCodeRef.current || !url) {
-      return;
-    }
-
+    if (!qrCodeRef.current || !url) return;
+    setError('');
     try {
-      const dataUrl = await toPng(qrCodeRef.current, { cacheBust: true });
-      const finalFileName = (fileName.trim() === '' ? 'qr-code' : fileName) + '.png';
+      const { dataUrl, finalFileName } = await captureImage();
 
-      // Use Web Share API if available
       if (navigator.share && navigator.canShare) {
         const response = await fetch(dataUrl);
         const blob = await response.blob();
         const file = new File([blob], finalFileName, { type: blob.type });
 
         if (navigator.canShare({ files: [file] })) {
-          await navigator.share({
-            files: [file],
-            title: fileName || 'QR Code',
-            text: caption || url,
-          });
-          return; // Exit if share is successful
+          await navigator.share({ files: [file], title: fileName || 'QR Code', text: caption || url });
+          return;
         }
       }
 
-      // Fallback to direct download if sharing is not available or fails
+      // 공유 미지원 브라우저 폴백: 다운로드
       const link = document.createElement('a');
       link.download = finalFileName;
       link.href = dataUrl;
       link.click();
     } catch (err) {
-      console.error('Failed to share or download QR code', err);
-      // Attempt a final fallback on any error
-      handleDirectDownload();
+      console.error('공유 또는 저장 실패', err);
+      setError('공유 또는 저장에 실패했습니다. 다시 시도해 주세요.');
     }
   };
 
   const handleDirectDownload = async () => {
-    if (!qrCodeRef.current || !url) {
-      return;
-    }
+    if (!qrCodeRef.current || !url) return;
+    setError('');
     try {
-      const dataUrl = await toPng(qrCodeRef.current, { cacheBust: true });
-      const finalFileName = (fileName.trim() === '' ? 'qr-code' : fileName) + '.png';
+      const { dataUrl, finalFileName } = await captureImage();
       const link = document.createElement('a');
       link.download = finalFileName;
       link.href = dataUrl;
       link.click();
     } catch (err) {
-      console.error('Failed to execute direct download', err);
+      console.error('내려받기 실패', err);
+      setError('내려받기에 실패했습니다. 다시 시도해 주세요.');
     }
   };
 
@@ -93,8 +89,9 @@ function App() {
       <div className="main-content">
         <div className="controls">
           <div className="input-group">
-            <label>URL 또는 텍스트</label>
+            <label htmlFor="url-input">URL 또는 텍스트</label>
             <input
+              id="url-input"
               type="text"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
@@ -102,8 +99,9 @@ function App() {
             />
           </div>
           <div className="input-group">
-            <label>문구</label>
+            <label htmlFor="caption-input">문구</label>
             <input
+              id="caption-input"
               type="text"
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
@@ -112,16 +110,18 @@ function App() {
           </div>
           <div className="color-picker-group">
             <div className="input-group">
-              <label>QR 코드 색상</label>
+              <label htmlFor="fg-color">QR 코드 색상</label>
               <input
+                id="fg-color"
                 type="color"
                 value={fgColor}
                 onChange={(e) => setFgColor(e.target.value)}
               />
             </div>
             <div className="input-group">
-              <label>배경 색상</label>
+              <label htmlFor="bg-color">배경 색상</label>
               <input
+                id="bg-color"
                 type="color"
                 value={bgColor}
                 onChange={(e) => setBgColor(e.target.value)}
@@ -129,17 +129,19 @@ function App() {
             </div>
           </div>
           <div className="input-group">
-            <label>저장할 파일명</label>
+            <label htmlFor="file-name">저장할 파일명</label>
             <input
+              id="file-name"
               type="text"
               value={fileName}
               onChange={(e) => setFileName(e.target.value)}
               placeholder="예: my-qr-code"
             />
           </div>
-                    <div className="button-group">
+          {error && <p className="error-message" role="alert">{error}</p>}
+          <div className="button-group">
             <button onClick={handleShare} disabled={!url}>공유하기(사진첩 저장 가능)</button>
-            <button onClick={handleDirectDownload} disabled={!url}>내려받기</button>
+            <button onClick={handleDirectDownload} disabled={!url} className="secondary">내려받기</button>
           </div>
         </div>
         <div className="preview">
