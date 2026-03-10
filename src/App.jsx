@@ -35,6 +35,15 @@ function App() {
   }, [url, fgColor, bgColor]);
 
   const captureImage = async () => {
+    // 캡처 전 QR 코드를 캔버스에 완전히 그린 뒤 진행 (race condition 방지)
+    await new Promise((resolve, reject) => {
+      QRCode.toCanvas(canvasRef.current, url, {
+        width: 280,
+        margin: 2,
+        color: { dark: fgColor, light: bgColor },
+      }, (err) => { if (err) reject(err); else resolve(); });
+    });
+
     const dataUrl = await toPng(qrCodeRef.current, { cacheBust: true });
     const finalFileName = (fileName.trim() === '' ? 'qr-code' : fileName) + '.png';
     return { dataUrl, finalFileName };
