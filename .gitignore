@@ -26,3 +26,6 @@ dist-ssr
 # 신기능 개발 작업 폴더 (홈페이지 이식 전)
 새기능/
 
+# Claude Code 로컬 설정
+.claude/
+
