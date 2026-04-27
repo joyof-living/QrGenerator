@@ -8,7 +8,7 @@ const DEFAULT_STATE = {
   btnRight: 24,
   btnBottom: 24,
   panelWidth: 380,
-  panelHeight: 640,
+  panelHeight: 560,
   minimized: false,
 };
 
@@ -213,8 +213,13 @@ export default function LaborChatFloat() {
     }
   };
 
-  const panelW = state.panelWidth;
-  const panelH = state.minimized ? HEADER_H : state.panelHeight;
+  // 뷰포트에 클램프 (다른 PC/창 크기 변화로 저장된 값이 너무 클 때 보호)
+  const viewportH = typeof window !== 'undefined' ? window.innerHeight : 800;
+  const viewportW = typeof window !== 'undefined' ? window.innerWidth : 1200;
+  const maxPanelH = Math.max(HEADER_H + 80, viewportH - state.btnBottom - BTN_SIZE - 24);
+  const maxPanelW = Math.max(MIN_W, viewportW - 24);
+  const panelW = Math.min(state.panelWidth, maxPanelW);
+  const panelH = state.minimized ? HEADER_H : Math.min(state.panelHeight, maxPanelH);
   const panelRight = state.btnRight;
   const panelBottom = state.btnBottom + BTN_SIZE + 12;
 

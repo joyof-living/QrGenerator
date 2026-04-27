@@ -270,9 +270,13 @@
   overflow: hidden;
   background: var(--lcf-surface1);
 }
+/* moel 사이트 자체 헤더(AI 노동법 상담 + 설정 톱니)를 시각적으로 클립.
+   확장 프로그램은 iframe-style.js로 display:none 주입했지만, cross-origin이라
+   외부에서 CSS 주입 불가. 대신 iframe 자체를 위로 끌어올려 보이지 않게 함. */
 .lcf-iframe-wrap iframe {
   width: 100%;
-  height: 100%;
+  height: calc(100% + 60px);
+  margin-top: -60px;
   border: none;
   display: block;
   background: var(--lcf-surface1);
