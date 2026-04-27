@@ -10,7 +10,20 @@ const DEFAULT_STATE = {
   panelWidth: 380,
   panelHeight: 560,
   minimized: false,
+  fontSize: 'normal', // 'small' | 'normal' | 'large' | 'xlarge'
 };
+
+const FONT_ZOOM = { small: 0.88, normal: 1, large: 1.14, xlarge: 1.28 };
+const FONT_LABEL = { small: '작게', normal: '보통', large: '크게', xlarge: '가장 크게' };
+
+const LANGUAGES = [
+  { code: 'ko', label: '한국어' },
+  { code: 'en', label: 'English' },
+  { code: 'zh', label: '中文' },
+  { code: 'ja', label: '日本語' },
+  { code: 'vi', label: 'Tiếng Việt' },
+  { code: 'th', label: 'ไทย' },
+];
 
 const MIN_W = 280;
 const MIN_H = 320;
@@ -90,6 +103,7 @@ export default function LaborChatFloat() {
   const [iframeLoading, setIframeLoading] = useState(true);
   const [chipsCollapsed, setChipsCollapsed] = useState(true);
   const [chipsClosed, setChipsClosed] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [toast, setToast] = useState('');
   const stateRef = useRef(state);
   const toastTimer = useRef(0);
@@ -202,7 +216,8 @@ export default function LaborChatFloat() {
     setIframeKey((k) => k + 1);
     setChipsClosed(false);
   };
-  const notSupported = () => showToast('확장 프로그램 전용 기능입니다');
+  const setFontSize = (size) => persist({ ...stateRef.current, fontSize: size });
+  const openSiteInNewTab = () => window.open(CHAT_URL, '_blank', 'noopener');
 
   const onChipClick = async (text) => {
     try {
@@ -246,10 +261,13 @@ export default function LaborChatFloat() {
               <div className="lcf-brand-name">AI 노동법 상담</div>
             </div>
             <div className="lcf-actions">
-              <button className="lcf-icon-btn" onClick={notSupported} title="대화 기록" aria-label="대화 기록">{Icon.history}</button>
               <button className="lcf-icon-btn" onClick={newChat} title="새 대화" aria-label="새 대화">{Icon.plus}</button>
-              <button className="lcf-icon-btn" onClick={notSupported} title="언어 선택" aria-label="언어 선택">{Icon.globe}</button>
-              <button className="lcf-icon-btn" onClick={notSupported} title="설정" aria-label="설정">{Icon.settings}</button>
+              <button
+                className={`lcf-icon-btn ${showSettings ? 'is-active' : ''}`}
+                onClick={() => setShowSettings((v) => !v)}
+                title="설정"
+                aria-label="설정"
+              >{Icon.settings}</button>
               <button className="lcf-icon-btn" onClick={toggleMinimize} title={state.minimized ? '복원' : '최소화'} aria-label="최소화">{Icon.minus}</button>
               <button className="lcf-icon-btn" onClick={close} title="닫기" aria-label="닫기">{Icon.close}</button>
             </div>
@@ -280,7 +298,10 @@ export default function LaborChatFloat() {
                 </div>
               )}
 
-              <div className="lcf-iframe-wrap">
+              <div
+                className="lcf-iframe-wrap"
+                style={{ '--lcf-zoom': FONT_ZOOM[state.fontSize] || 1 }}
+              >
                 <iframe
                   key={iframeKey}
                   src={CHAT_URL}
@@ -290,6 +311,45 @@ export default function LaborChatFloat() {
                 />
                 {iframeLoading && (
                   <div className="lcf-spinner"><div className="lcf-spin" /></div>
+                )}
+                {showSettings && (
+                  <div className="lcf-settings">
+                    <div className="lcf-settings-header">
+                      <span className="lcf-settings-title">설정</span>
+                      <button className="lcf-icon-btn" onClick={() => setShowSettings(false)} title="닫기" aria-label="설정 닫기">{Icon.close}</button>
+                    </div>
+                    <div className="lcf-settings-body">
+                      <section className="lcf-settings-section">
+                        <h4 className="lcf-settings-label">글자 크기</h4>
+                        <div className="lcf-seg">
+                          {Object.keys(FONT_LABEL).map((k) => (
+                            <button
+                              key={k}
+                              className={`lcf-seg-btn ${state.fontSize === k ? 'is-active' : ''}`}
+                              onClick={() => setFontSize(k)}
+                            >{FONT_LABEL[k]}</button>
+                          ))}
+                        </div>
+                      </section>
+                      <section className="lcf-settings-section">
+                        <h4 className="lcf-settings-label">언어</h4>
+                        <div className="lcf-lang-grid">
+                          {LANGUAGES.map((l) => (
+                            <button
+                              key={l.code}
+                              className="lcf-lang-btn"
+                              onClick={openSiteInNewTab}
+                              title="새 탭에서 사이트를 열어 변경하세요"
+                            >{l.label}</button>
+                          ))}
+                        </div>
+                        <p className="lcf-settings-note">
+                          외부 페이지에서는 사이트의 언어를 직접 바꿀 수 없습니다.
+                          버튼을 누르면 사이트가 새 탭에서 열려요. 거기서 언어를 바꾸면 다음 접속부터 적용됩니다.
+                        </p>
+                      </section>
+                    </div>
+                  </div>
                 )}
               </div>
             </>
