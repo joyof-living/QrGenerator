@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import QRCode from 'qrcode';
+import LaborChatFloat from './LaborChatFloat';
 import './App.css';
 
 function App() {
@@ -191,6 +192,7 @@ function App() {
           </div>
         </div>
       </div>
+      <LaborChatFloat />
     </div>
   );
 }
