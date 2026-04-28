@@ -47,40 +47,16 @@ function loadState() {
   }
 }
 
-// ── 노법이 마스코트 SVG (원본과 동일) ────────────────────
 function Mascot({ size }) {
-  const showSpark = size >= 32;
-  const showFlag = size >= 40;
-  const path = 'M -34 -10 L -32 -34 L -18 -26 L -10 -34 L 0 -28 L 10 -34 L 18 -26 L 32 -34 L 34 -10 Q 38 14 24 28 Q 0 38 -24 28 Q -38 14 -34 -10 Z';
-  const uid = `m${size}`;
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="-50 -50 100 100" width={size} height={size} aria-hidden="true" focusable="false" style={{ display: 'block' }}>
-      <defs>
-        <linearGradient id={`${uid}-r`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#3b6f96" />
-          <stop offset="45%" stopColor="#2f4c7e" />
-          <stop offset="100%" stopColor="#2c2e56" />
-        </linearGradient>
-        <radialGradient id={`${uid}-i`} cx="50%" cy="42%" r="62%">
-          <stop offset="0%" stopColor="#252e3d" />
-          <stop offset="100%" stopColor="#11161f" />
-        </radialGradient>
-      </defs>
-      <path d={path} fill={`url(#${uid}-r)`} />
-      <g transform="translate(0 3) scale(0.84)"><path d={path} fill={`url(#${uid}-i)`} /></g>
-      {showFlag && <path d="M -22 -32 L -22 -16 L -18 -20 L -14 -16 L -14 -32 Z" fill="#f0c781" opacity="0.95" />}
-      <g transform="translate(0 2) scale(0.84)">
-        <ellipse cx="-11" cy="0" rx="3.0" ry="4.0" fill="white" />
-        <ellipse cx="11" cy="0" rx="3.0" ry="4.0" fill="white" />
-        <ellipse cx="-10" cy="-1.2" rx="0.8" ry="1" fill="white" opacity="0.85" />
-        <ellipse cx="12" cy="-1.2" rx="0.8" ry="1" fill="white" opacity="0.85" />
-        <path d="M -4 9 Q 0 12.5 4 9" stroke="white" strokeWidth="2.2" fill="none" strokeLinecap="round" />
-      </g>
-      {showSpark && <>
-        <circle cx="38" cy="-38" r="3.2" fill="#f0c781" />
-        <circle cx="44" cy="-44" r="1.4" fill="#f0c781" opacity="0.75" />
-      </>}
-    </svg>
+    <img
+      src="/mascot.png"
+      width={size}
+      height={size}
+      alt=""
+      aria-hidden="true"
+      style={{ display: 'block' }}
+    />
   );
 }
 
