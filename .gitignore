@@ -29,3 +29,6 @@ dist-ssr
 # Claude Code 로컬 설정
 .claude/
 
+# 정적 자산 (마스코트 등 — 로컬에서만 관리)
+public/
+
